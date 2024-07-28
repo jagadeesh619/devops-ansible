@@ -1,0 +1,23 @@
+- name: app setup for application {{component}}
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: app-setup
+- name : importing nodejs setup application 
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: nodejs-setup
+- name: copying config file
+  ansible.builtin.template:
+    src: catalogue.service.j2
+    dest: /etc/systemd/system/catalogue.service
+- name: system deamon reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+- name: importing mongodb to load data
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: mongodb_data_load
+
+
+
+

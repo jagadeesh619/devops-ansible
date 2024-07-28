@@ -1,0 +1,7 @@
+- name: "deploying the application {{component}}"
+  hosts: "{{component}}"
+  vars_files:
+  - variables.yaml
+  become: yes
+  roles:
+  - "{{component}}"

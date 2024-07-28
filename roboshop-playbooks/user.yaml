@@ -1,0 +1,60 @@
+- name: installing user
+  hosts: user
+  become: yes
+  tasks:
+    - name: disable and enable nodejs
+      ansible.builtin.shell: dnf module disable nodejs -y;dnf module enable nodejs:18 -y
+    - name: installing nodjs
+      ansible.builtin.package:
+        name: nodejs
+        state: present
+    - name: adding user
+      ansible.builtin.user:
+        name: roboshop
+    - name: creating app directory
+      ansible.builtin.file:
+        path: /app
+        state: directory
+    - name: download application from url 
+      ansible.builtin.get_url:
+        url: https://roboshop-builds.s3.amazonaws.com/user.zip
+        dest: /tmp/user.zip
+    - name: unarchive the zip file
+      ansible.builtin.unarchive:
+        src:  /tmp/user.zip
+        dest: /app
+        remote_src: yes
+    - name: install dependencies 
+      ansible.builtin.command: npm install
+      args:
+        chdir: /app
+    - name: copying config file
+      ansible.builtin.copy:
+        src: user.service
+        dest: /etc/systemd/system/user.service
+    - name: system deamon reload
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+    - name: copying mongo repo
+      ansible.builtin.copy:
+        src: mongo.repo
+        dest: /etc/yum.repos.d/mongo.repo
+    - name: download mongodb
+      ansible.builtin.package:
+        name: mongodb-org-shell
+        state: present
+    - name: get the users count
+      ansible.builtin.command: mongo --host mongodb.infome.website --quiet --eval 'db=db.getSiblingDB("user");db.users.count()'
+      register: users_count
+    - name: load DB schema
+      ansible.builtin.command: mongo --host mongodb.infome.website < /app/schema/user.js
+      when: users_count.stdout == "0"
+    - name: enable and starting user
+      ansible.builtin.service:
+        name: user
+        state: restarted
+        enabled: yes
+
+
+
+

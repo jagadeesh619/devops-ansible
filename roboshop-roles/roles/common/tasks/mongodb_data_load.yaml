@@ -1,0 +1,29 @@
+- name: copying mongo repo
+  ansible.builtin.copy:
+    src: mongo.repo
+    dest: /etc/yum.repos.d/mongo.repo
+- name: download mongodb
+  ansible.builtin.package:
+    name: mongodb-org-shell
+    state: present
+- name: get the products count
+  ansible.builtin.command: mongo --host mongodb.infome.website --quiet --eval 'db=db.getSiblingDB("{{component}}");db.products.count()'
+  register: product_count
+  when: "{{component}}" == "catalogue"
+- name: get the products count
+  ansible.builtin.command: mongo --host mongodb.infome.website --quiet --eval 'db=db.getSiblingDB("{{component}}");db.users.count()'
+  register: user
+  when: "{{component}}" == "user"
+  ignore_errors: true
+- name: load DB schema
+  ansible.builtin.command: mongo --host mongodb.infome.website < /app/schema/{{component}}.js
+  when: product_count.stdout == "0" and "{{component}}" == "catalogue"
+- name: load DB schema
+  ansible.builtin.command: mongo --host mongodb.infome.website < /app/schema/{{component}}.js
+  when: user.stdout == "0" and "{{component}}" == "user"
+- name: starting the application {{component}}
+  ansible.builtin.service:
+    name: "{{component}}"
+    state: restarted
+    enabled: yes
+
