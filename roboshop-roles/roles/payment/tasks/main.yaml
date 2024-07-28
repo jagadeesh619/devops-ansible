@@ -1,0 +1,34 @@
+- name: installing python
+  ansible.builtin.package:
+    name: "{{item}}"
+    state: present
+  loop:
+    - python36
+    - gcc
+    - python3-devel
+
+- name: app setup for application {{component}}
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: app-setup
+
+- name: install dependencies 
+  ansible.builtin.command: pip3.6 install -r requirements.txt
+  args:
+    chdir: /app    
+- name: copying config file
+  ansible.builtin.template:
+    src: payment.service.j2
+    dest: /etc/systemd/system/payment.service
+- name: system deamon reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+- name: starting and enabled payment service
+  ansible.builtin.service:
+    name: payment
+    state: started
+    enabled: yes
+
+
+
+

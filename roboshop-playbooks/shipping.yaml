@@ -1,0 +1,72 @@
+- name: installing shipping
+  hosts: shipping
+  become: yes
+  tasks: 
+  - name: install maven
+    ansible.builtin.package:
+      name: maven
+      state: present
+
+  - name: adding roboshop user
+    ansible.builtin.user:
+      name: roboshop
+
+  - name: remove app directory if exists
+    ansible.builtin.file:
+      path: /app
+      state: absent
+
+  - name: making app directory
+    ansible.builtin.file:
+      path: /app
+      state: directory
+
+  - name: download shipping
+    ansible.builtin.get_url:
+      url: https://roboshop-builds.s3.amazonaws.com/shipping.zip
+      dest: /tmp
+
+  - name: unarchive the file
+    ansible.builtin.unarchive:
+      src: /tmp/shipping.zip
+      dest: /app
+      remote_src: yes
+
+  - name: install packages
+    ansible.builtin.command: mvn clean package
+    args:
+      chdir: /app
+
+  - name: rename jar file
+    ansible.builtin.command: mv target/shipping-1.0.jar shipping.jar
+    args:
+      chdir: /app
+
+  - name: copying content of shippinng service
+    ansible.builtin.copy:
+      src: shipping.service
+      dest: /etc/systemd/system/shipping.service
+
+  - name: daemon reload and start
+    ansible.builtin.systemd_service:
+      daemon-reload: true
+  - name: install mysql
+    ansible.builtin.package:
+      name: mysql
+      state: present
+  - name: check cities data aleady available or not 
+    ansible.builtin.shell: mysql -h mysql.infome.website -uroot -pRoboShop@1 -sN -e "select count(*) from information_schema.schemata where schema_name ='cities'"
+    register: schema
+  - name: data load cities
+    ansible.builtin.shell: "mysql -h mysql.infome.website -uroot -pRoboShop@1 < /app/schema/shipping.sql"
+    when: schema.stdout != "1"
+  - name: enable and starting shipping
+    ansible.builtin.service:
+      name: shipping
+      state: restarted
+      enabled: yes
+
+  
+
+    
+    
