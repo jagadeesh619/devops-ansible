@@ -26,11 +26,6 @@
 #     name: "{{component}}"
 #     state: restarted
 #     enabled: yes
-- name: Copying MongoDB repo
-  ansible.builtin.copy:
-    src: mongo.repo
-    dest: /etc/yum.repos.d/mongo.repo
-
 - name: Download MongoDB
   ansible.builtin.dnf:
     name: mongodb-org-shell
