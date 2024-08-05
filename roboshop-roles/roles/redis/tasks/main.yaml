@@ -1,25 +1,31 @@
-- name: installing redis
+- name: Install and configure Redis
   hosts: redis
   become: yes
   tasks:
-    - name: download redis 
+    - name: Download and install Remi repository
       ansible.builtin.dnf:
         name: https://rpms.remirepo.net/enterprise/remi-release-8.rpm
         state: present
         disable_gpg_check: true
-    - name: enable redis
-      ansible.builtin.command: dnf module enable redis:remi-6.2 -y
-    - name: install redis
-      ansible.builtin.package:
+
+    - name: Enable Redis module from Remi repository
+      ansible.builtin.command:
+        cmd: dnf module enable redis:remi-6.2 -y
+        creates: /etc/redis.conf  # Ensure this command is idempotent
+
+    - name: Install Redis package
+      ansible.builtin.dnf:
         name: redis
         state: present
-    - name: replace localhost of redis
+
+    - name: Replace localhost with 0.0.0.0 in Redis configuration
       ansible.builtin.replace:
         path: /etc/redis.conf
-        regexp: '127.0.0.1'
-        replace: '0.0.0.0'
-    - name: start and enable redis
-      ansible.builtin.service:
+        regexp: '^bind 127.0.0.1'
+        replace: 'bind 0.0.0.0'
+
+    - name: Start and enable Redis service
+      ansible.builtin.systemd:
         name: redis
         state: started
         enabled: yes
