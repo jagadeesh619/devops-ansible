@@ -2,6 +2,7 @@
   hosts: "{{component}}"
   vars_files:
   - variables.yaml
+  - secrets.yml
   become: yes
   roles:
   - "{{component}}"
