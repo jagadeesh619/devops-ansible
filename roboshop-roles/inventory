@@ -18,3 +18,6 @@ shipping.infome.website
 payment.infome.website
 [web]
 web.infome.website
+
+[all:vars]
+ansible_password = DevOps321
