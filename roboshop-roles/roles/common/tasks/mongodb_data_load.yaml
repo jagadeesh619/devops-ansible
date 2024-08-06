@@ -48,11 +48,15 @@
   ansible.builtin.command:
     cmd: mongo --host mongodb.infome.website < /app/schema/{{ component }}.js
   when: product_count.stdout == "0" and component == "catalogue"
+  ignore_errors: true
+
 
 - name: Load DB schema for user
   ansible.builtin.command:
     cmd: mongo --host mongodb.infome.website < /app/schema/{{ component }}.js
   when: user_count.stdout == "0" and component == "user"
+  ignore_errors: true
+
 
 - name: Starting the application {{ component }}
   ansible.builtin.systemd:
