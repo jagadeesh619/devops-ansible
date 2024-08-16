@@ -1,7 +1,9 @@
 - name: "deploying the application {{component}}"
-  hosts: "{{component}}"
+  # hosts: "{{component}}"
+  hosts: localhost
+  connection: local
   vars_files:
-  - variables.yaml
+  - variables-{{env}}.yaml
   become: yes
   roles:
   - "{{component}}"
